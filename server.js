@@ -110,7 +110,7 @@ function resolveRound(room) {
   room.history.push({ round: room.round, report });
   room.deadline = null;
 
-  if (room.round >= 5 || [...room.players.values()].every(p => !p.alive)) {
+  if (room.round >= 10 || [...room.players.values()].every(p => !p.alive)) {
     finishGame(room);
   } else {
     room.phase = "result";
