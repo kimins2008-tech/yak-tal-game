@@ -1,0 +1,12 @@
+{
+  "name": "yak-tal-game",
+  "version": "1.0.0",
+  "private": true,
+  "description": "약탈게임 - 실시간 멀티플레이 웹게임",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": {
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1"
+  }
+}

@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>약탈게임</title>
+<style>
+:root{--ink:#25324a;--muted:#68758b;--blue:#dff1ff;--yellow:#fff2bd;--green:#dff5df;--pink:#ffe4e7;--line:#dce4ed;--paper:#fff;--bg:#f5f8fc}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif}
+button,input{font:inherit}button{border:0;border-radius:14px;padding:12px 18px;font-weight:800;cursor:pointer;background:#4c8ed9;color:white}button:disabled{opacity:.45;cursor:not-allowed}.secondary{background:#e9eff6;color:var(--ink)}.danger{background:#e36c75}.hidden{display:none!important}
+header{background:white;border-bottom:1px solid var(--line);padding:15px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:0;z-index:2}
+.brand{font-size:24px;font-weight:950;letter-spacing:-1px}.brand span{font-size:26px;margin-right:7px}
+main{max-width:1050px;margin:24px auto;padding:0 16px 50px}.panel{background:white;border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 5px 18px #2b42600a;margin-bottom:16px}
+h1,h2,h3,p{margin-top:0}h1{font-size:30px;margin-bottom:8px}h2{font-size:21px;margin-bottom:14px}.muted{color:var(--muted)}.small{font-size:13px}.center{text-align:center}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.spread{justify-content:space-between}
+input{border:1px solid var(--line);border-radius:13px;padding:13px 14px;min-width:0;width:100%;outline:none}input:focus{border-color:#4c8ed9}.field{display:grid;gap:7px;margin:12px 0}.actions{display:flex;gap:9px;flex-wrap:wrap}.actions button{flex:1}
+.homegrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.homecard{background:#f8fbff;border:1px solid var(--line);border-radius:18px;padding:18px}
+.players{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px}.player{border:1px solid var(--line);border-radius:17px;padding:13px;background:#fff}.player .avatar{font-size:28px}.gold{font-size:22px;font-weight:950;color:#b47b08}.status{font-size:12px;font-weight:800;border-radius:99px;padding:4px 8px;background:#edf2f7;display:inline-block}.alive{background:#e3f6e8;color:#267541}.dead{background:#ffe5e7;color:#b83e4a}
+.timerbox{background:#e9f5ff;border-radius:20px;padding:16px;text-align:center;margin:15px 0}.timer{font-size:42px;line-height:1.2;font-weight:950;font-variant-numeric:tabular-nums;color:#2769a9}.timer.warning{color:#c34b36;animation:pulse .8s infinite alternate}.timerlabel{font-weight:800}.progress{height:9px;border-radius:99px;background:#d5e3f0;overflow:hidden;margin-top:12px}.bar{height:100%;background:#5a9cdb;width:100%;transition:width .25s linear}.bar.warning{background:#e36c75}@keyframes pulse{to{transform:scale(1.06)}}
+.choicegrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}.choice{background:#fff;border:2px solid var(--line);color:var(--ink);padding:16px 8px;min-height:108px}.choice strong{display:block;font-size:18px;margin:5px}.choice.selected{border-color:#4c8ed9;background:#eaf5ff}.choice .emoji{font-size:29px}.targetlist{display:flex;flex-wrap:wrap;gap:8px}.target{background:#f0f4f8;color:var(--ink);border:2px solid transparent}.target.selected{border-color:#4c8ed9;background:#e7f3ff}.toggle{display:flex;align-items:center;gap:9px;background:#fff7d9;border:1px solid #f1d98a;padding:12px;border-radius:14px;margin:12px 0}.toggle input{width:20px;height:20px}
+.notice{border-radius:14px;padding:12px 14px;background:#edf5ff;margin:10px 0}.notice.warn{background:#fff0e5;color:#a34b1d}.resultrow{display:grid;grid-template-columns:1.3fr .7fr .7fr .8fr;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);align-items:center}.resultrow:last-child{border:0}.delta.plus{color:#25864c;font-weight:900}.delta.minus{color:#c44c55;font-weight:900}.history{border:1px solid var(--line);border-radius:14px;padding:12px;margin:8px 0}.winner{background:#fff5cc;border:1px solid #f1d778;border-radius:18px;padding:22px;text-align:center}
+@media(max-width:650px){.homegrid{grid-template-columns:1fr}.choicegrid{gap:6px}.choice{padding:12px 4px;min-height:96px}.choice strong{font-size:15px}.timer{font-size:36px}.panel{padding:17px}.resultrow{grid-template-columns:1fr .6fr .6fr}.resultrow>*:last-child{display:none}}
+</style>
+</head>
+<body>
+<header><div class="brand"><span>🪙</span>약탈게임</div><div class="row"><span id="roomBadge" class="status hidden"></span><span id="roleBadge" class="status hidden"></span></div></header>
+<main>
+<section id="home">
+  <div class="panel center">
+    <div style="font-size:56px">🪙 🛡️ 💰</div><h1>약탈게임에 오신 걸 환영해요!</h1>
+    <p class="muted">친구들과 전략을 세워 금괴를 모아 보세요.</p>
+    <div class="homegrid" style="text-align:left;margin-top:20px">
+      <div class="homecard"><h2>🏠 새 게임 만들기</h2><div class="field"><label>방장 닉네임</label><input id="hostName" maxlength="14" placeholder="예: 선생님"></div><button id="createBtn" style="width:100%">방 만들기</button><p class="small muted" style="margin:10px 0 0">방장은 플레이하지 않고 현황판만 볼 수 있어요.</p></div>
+      <div class="homecard"><h2>🚪 게임 참가하기</h2><div class="field"><label>방 코드</label><input id="joinCode" maxlength="5" placeholder="5자리 코드" style="text-transform:uppercase"></div><div class="field"><label>내 닉네임</label><input id="playerName" maxlength="14" placeholder="닉네임"></div><button id="joinBtn" style="width:100%">게임 참가</button></div>
+    </div>
+    <p id="homeError" class="small" style="color:#c34b36;margin:12px 0 0"></p>
+  </div>
+  <div class="panel"><h2>🎮 게임 규칙</h2><div class="players">
+    <div class="homecard"><b>⚔️ 공격</b><p class="small muted">한 명을 골라 금괴 1개를 빼앗아요.</p></div>
+    <div class="homecard"><b>🛡️ 방어</b><p class="small muted">나를 향한 공격을 모두 막아요. 연속 사용은 안 돼요.</p></div>
+    <div class="homecard"><b>🪞 반사</b><p class="small muted">공격자를 모두 반격해요. 아무도 공격하지 않으면 금괴 2개를 잃어요.</p></div>
+    <div class="homecard"><b>✨ 더블</b><p class="small muted">한 번 사용 가능. 이번 라운드 획득 금괴가 2배예요.</p></div>
+  </div></div>
+</section>
+
+<section id="game" class="hidden">
+  <div class="panel">
+    <div class="row spread"><div><span class="status" id="phaseBadge">대기실</span><h1 id="gameTitle">참가자 대기 중</h1><p id="gameSub" class="muted">친구들에게 방 코드를 알려주세요.</p></div><div class="center"><div class="small muted">방 코드</div><div id="codeDisplay" style="font-size:28px;font-weight:950;letter-spacing:3px">-----</div><button class="secondary small" id="copyCode">코드 복사</button></div></div>
+    <div id="hostStartWrap" class="hidden" style="margin-top:15px"><button id="startBtn">게임 시작하기 ▶</button><span class="small muted" style="margin-left:10px">플레이어 2명 이상 필요</span></div>
+    <div id="hostNextWrap" class="hidden" style="margin-top:15px"><button id="nextBtn">다음 라운드 시작 ▶</button></div>
+  </div>
+  <div id="timerPanel" class="panel hidden">
+    <div class="row spread"><h2 style="margin:0">⏱️ 행동 선택 시간</h2><span class="status" id="roundBadge">1라운드</span></div>
+    <div class="timerbox"><div id="timer" class="timer">03:00</div><div id="timerMessage" class="timerlabel">시간 안에 행동을 선택해 주세요!</div><div class="progress"><div id="timerBar" class="bar"></div></div></div>
+    <div id="myChoiceStatus" class="notice hidden"></div>
+    <div id="choiceArea" class="hidden">
+      <h2>이번 라운드에 어떤 행동을 할까요?</h2>
+      <div class="choicegrid">
+        <button class="choice" data-action="attack"><span class="emoji">⚔️</span><strong>공격</strong><span class="small">한 명 지목</span></button>
+        <button class="choice" data-action="defend"><span class="emoji">🛡️</span><strong>방어</strong><span class="small">모든 공격 막기</span></button>
+        <button class="choice" data-action="reflect"><span class="emoji">🪞</span><strong>반사</strong><span class="small">공격자 반격</span></button>
+      </div>
+      <div id="targetArea" class="hidden"><b>공격할 플레이어를 선택하세요.</b><div id="targets" class="targetlist" style="margin-top:10px"></div></div>
+      <label class="toggle"><input type="checkbox" id="doubleCheck"><span><b>✨ 더블 사용!</b><br><span class="small">이번 라운드 획득 금괴 2배 (게임에서 1회)</span></span></label>
+      <button id="submitChoice" style="width:100%" disabled>선택 확정하기</button>
+      <p id="choiceError" class="small" style="color:#c34b36;margin:8px 0 0"></p>
+    </div>
+  </div>
+  <div class="panel"><div class="row spread"><h2 style="margin:0">👥 플레이어 현황</h2><span class="small muted" id="playerCount"></span></div><div class="players" id="players"></div></div>
+  <div id="resultPanel" class="panel hidden"><h2>📣 라운드 결과</h2><div id="resultRows"></div><div id="hostResultHint" class="notice hidden">결과를 확인한 뒤 다음 라운드를 시작해 주세요.</div></div>
+  <div id="winnerPanel" class="winner hidden"><div style="font-size:48px">🏆</div><h1>게임 종료!</h1><h2 id="winnerNames"></h2><p id="winnerText" class="muted"></p></div>
+  <div class="panel"><h2>📋 지난 라운드 기록</h2><div id="history"><p class="muted small">아직 진행된 라운드가 없어요.</p></div></div>
+</section>
+</main>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+let role = null, myId = null, roomState = null, selectedAction = null, selectedTarget = null, tick = null;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function showError(msg){$("homeError").textContent=msg||""}
+function enterRoom(info){
+  role=info.role; $("home").classList.add("hidden"); $("game").classList.remove("hidden");
+  $("roleBadge").textContent=role==="host"?"방장":"플레이어"; $("roleBadge").classList.remove("hidden");
+}
+$("createBtn").onclick=()=>{showError("");socket.emit("room:create",{name:$("hostName").value},r=>{if(r.error)return showError(r.error);enterRoom(r);})};
+$("joinBtn").onclick=()=>{showError("");socket.emit("room:join",{code:$("joinCode").value,name:$("playerName").value},r=>{if(r.error)return showError(r.error);enterRoom(r);})};
+$("copyCode").onclick=()=>navigator.clipboard?.writeText(roomState?.code||"");
+$("startBtn").onclick=()=>socket.emit("game:start",r=>{if(r?.error)alert(r.error)});
+$("nextBtn").onclick=()=>socket.emit("round:next",r=>{if(r?.error)alert(r.error)});
+let targetButtons=[];
+document.querySelectorAll(".choice").forEach(b=>b.onclick=()=>{
+  if(role!=="player"||roomState?.phase!=="choosing")return;
+  selectedAction=b.dataset.action; selectedTarget=null;
+  document.querySelectorAll(".choice").forEach(x=>x.classList.toggle("selected",x===b));
+  $("targetArea").classList.toggle("hidden",selectedAction!=="attack");
+  if(selectedAction==="attack")renderTargets();
+  updateSubmit();
+});
+function renderTargets(){
+  const me=roomState.players.find(p=>p.id===myId);
+  $("targets").innerHTML=roomState.players.filter(p=>p.alive&&p.id!==myId).map(p=>`<button class="target ${selectedTarget===p.id?"selected":""}" data-id="${p.id}">${esc(p.name)} · 🪙${p.gold}</button>`).join("");
+  document.querySelectorAll(".target").forEach(b=>b.onclick=()=>{selectedTarget=b.dataset.id;renderTargets();updateSubmit()});
+}
+function updateSubmit(){
+  const me=roomState?.players.find(p=>p.id===myId);
+  const invalid=selectedAction==="defend"&&me?.defendedLastRound;
+  $("submitChoice").disabled=!selectedAction||(selectedAction==="attack"&&!selectedTarget)||invalid;
+  $("choiceError").textContent=invalid?"방어는 연속으로 사용할 수 없어요.":(selectedAction==="attack"&&!selectedTarget?"공격 대상을 선택해 주세요.":"");
+}
+$("doubleCheck").onchange=()=>updateSubmit();
+$("submitChoice").onclick=()=>{
+  const me=roomState?.players.find(p=>p.id===myId);
+  if($("doubleCheck").checked&&me?.usedDouble){$("choiceError").textContent="더블은 이미 사용했어요.";return}
+  socket.emit("choice:submit",{action:selectedAction,targetId:selectedTarget,double:$("doubleCheck").checked},r=>{
+    if(r?.error){$("choiceError").textContent=r.error;return}
+    $("choiceArea").classList.add("hidden");$("myChoiceStatus").classList.remove("hidden");$("myChoiceStatus").textContent="선택 완료! 다른 플레이어의 선택을 기다리고 있어요.";
+  });
+};
+function renderPlayers(){
+  const ps=roomState.players;$("playerCount").textContent=`${ps.length}/6명`;
+  $("players").innerHTML=ps.map((p,i)=>`<div class="player"><div class="row spread"><span class="avatar">${["🦊","🐻","🐼","🐸","🐱","🐰"][i%6]}</span><span class="status ${p.alive?"alive":"dead"}">${p.alive?"생존":"탈락"}</span></div><b>${esc(p.name)}</b><div class="gold">🪙 ${p.gold}개</div><div class="small muted">${p.usedDouble?"더블 사용 완료":"더블 보유"}${p.defendedLastRound?" · 직전 방어":""}</div>${role==="host"&&roomState.phase==="choosing"?`<div class="small">${p.submitted?"✅ 선택 완료":"⌛ 선택 중"}</div>`:""}</div>`).join("");
+}
+function renderResults(){
+ const r=roomState.lastResult;if(!r)return;
+ $("resultRows").innerHTML=`<div class="resultrow small muted"><b>플레이어</b><b>행동</b><b>변화</b><b>남은 금괴</b></div>`+r.report.map(x=>`<div class="resultrow"><b>${esc(x.name)} ${x.eliminated?"❌":""}</b><span>${({attack:"⚔️ 공격",defend:"🛡️ 방어",reflect:"🪞 반사",none:"— 무행동"})[x.action]}</span><span class="delta ${x.delta>0?"plus":x.delta<0?"minus":""}">${x.delta>0?"+":""}${x.delta}</span><b>🪙 ${x.gold}</b></div>`).join("");
+}
+function renderHistory(){
+ $("history").innerHTML=roomState.history.length?roomState.history.map(h=>`<div class="history"><b>${h.round}라운드</b><div class="small muted">${h.report.map(x=>`${esc(x.name)} ${x.delta>0?"+":""}${x.delta}개${x.eliminated?" (탈락)":""}`).join(" · ")}</div></div>`).join(""):'<p class="muted small">아직 진행된 라운드가 없어요.</p>';
+}
+function updateTimer(){
+ if(!roomState||roomState.phase!=="choosing")return;
+ const left=Math.max(0,roomState.deadline-Date.now()),sec=Math.ceil(left/1000),m=String(Math.floor(sec/60)).padStart(2,"0"),s=String(sec%60).padStart(2,"0");
+ const warning=sec<=30;$("timer").textContent=`${m}:${s}`;$("timer").classList.toggle("warning",warning);$("timerBar").classList.toggle("warning",warning);$("timerBar").style.width=(left/180000*100)+"%";
+ $("timerMessage").textContent=warning?"⏰ 30초 이하! 서둘러 선택해 주세요!":"시간 안에 행동을 선택해 주세요!";
+}
+socket.on("room:update",state=>{
+ roomState=state;myId=socket.id;
+ $("roomBadge").textContent=state.code;$("roomBadge").classList.remove("hidden");$("codeDisplay").textContent=state.code;
+ $("phaseBadge").textContent=({lobby:"대기실",choosing:"선택 중",result:"결과 확인",finished:"게임 종료"})[state.phase];
+ $("gameTitle").textContent=state.phase==="lobby"?"친구들을 기다리고 있어요":`${state.round}라운드`;
+ $("gameSub").textContent=state.phase==="lobby"?"방 코드를 친구들에게 공유해 주세요.":state.phase==="choosing"?"각자 비밀리에 행동을 선택하고 있어요.":state.phase==="result"?"이번 라운드 결과를 확인해 보세요.":"모든 라운드가 끝났어요.";
+ $("hostStartWrap").classList.toggle("hidden",!(role==="host"&&state.phase==="lobby"));
+ $("hostNextWrap").classList.toggle("hidden",!(role==="host"&&state.phase==="result"));
+ $("timerPanel").classList.toggle("hidden",state.phase!=="choosing");
+ $("resultPanel").classList.toggle("hidden",!["result","finished"].includes(state.phase));
+ $("hostResultHint").classList.toggle("hidden",role!=="host"||state.phase!=="result");
+ $("winnerPanel").classList.toggle("hidden",state.phase!=="finished");
+ if(state.phase==="choosing"){
+   const me=state.players.find(p=>p.id===myId);
+   $("choiceArea").classList.toggle("hidden",role!=="player"||!me?.alive||me?.submitted);
+   $("myChoiceStatus").classList.toggle("hidden",role!=="player"||!me?.submitted);
+   if(role==="player"&&me?.submitted)$("myChoiceStatus").textContent="선택 완료! 다른 플레이어의 선택을 기다리고 있어요.";
+   $("roundBadge").textContent=`${state.round}라운드`;
+   if(!tick)tick=setInterval(updateTimer,200);
+   updateTimer();
+ }else{if(tick){clearInterval(tick);tick=null}}
+ if(state.phase==="finished"){
+   $("winnerNames").textContent=state.winner.join(", ")+" 승리!";
+   $("winnerText").textContent=state.winner.length>1?"금괴 수가 같아 공동 우승이에요.":"축하합니다! 가장 많은 금괴를 모았어요.";
+ }
+ renderPlayers();if(state.lastResult)renderResults();renderHistory();
+ if(state.phase==="choosing"){selectedAction=null;selectedTarget=null;document.querySelectorAll(".choice").forEach(x=>x.classList.remove("selected"));$("doubleCheck").checked=false;}
+});
+socket.on("connect",()=>{myId=socket.id});
+</script>
+</body></html>
